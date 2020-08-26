@@ -1,0 +1,58 @@
+#include <CayenneMQTTESP32.h>
+#define CAYENNE_DEBUG
+#define CAYENNE_PRINT Serial
+#define trigPin 13
+#define echoPin 12
+// Define variables:
+long duration;
+int distance;
+int potensio = 0;
+
+char ssid[] = "WaterLevelNode";
+char password[] = "Wi070707";
+char username[] = "595fe320-f9f9-11e9-84bb-8f71124cfdfb";
+char mqtt_password[] = "ca1601088df82b4ba32cbda89696559250bf7743";
+char cliend_id[] = "45eb9c90-e1c4-11ea-a67f-15e30d90bbf4";
+long toggle = 0;
+
+void setup() {
+  Serial.begin(9600);
+  Cayenne.begin(username, mqtt_password, cliend_id, ssid, password);
+  pinMode(2, OUTPUT);
+  pinMode(5, OUTPUT);
+  digitalWrite(2, HIGH);
+//  digitalWrite(5, LOW);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+}
+
+void loop() {
+//  digitalWrite(5, LOW);
+  // Charge Toggle
+  toggle++;
+  if (toggle == 1800) //1 cycle sekitar 2 detik
+  {
+    digitalWrite(2, !digitalRead(2));
+    toggle = 0;
+  }
+  Serial.println(toggle);
+  /////////////////////////////////////
+  // Sensor Part
+  // Clear the trigPin by setting it LOW:
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(5);
+  // Trigger the sensor by setting the trigPin high for 10 microseconds:
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  // Read the echoPin. pulseIn() returns the duration (length of the pulse) in microseconds:
+  duration = pulseIn(echoPin, HIGH);
+  // Calculate the distance:
+  distance = (duration * 0.034 / 2) * 0.9671 - 1.3116;
+  // Send to Cayenne
+  Cayenne.loop();
+  Cayenne.virtualWrite (1, distance);
+  Cayenne.virtualWrite (2, distance);
+  //
+//  delay(100);
+}
